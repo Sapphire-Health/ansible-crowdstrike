@@ -1,0 +1,62 @@
+---
+  - hosts: localhost
+    connection: local
+    gather_facts: false
+    tasks:
+      - name: Authenticate
+        include_tasks: task_auth.yml
+      - name: Get Device
+        include_tasks: task_get_device.yml
+        vars:
+          token: "{{ response.json.access_token }}"
+      - name: Print the device
+        ansible.builtin.debug:
+          msg: "{{ device }}"
+      - name: Initialize a session with a device
+        uri:
+          url: "{{ CSAPIURL | default('https://api.crowdstrike.com') }}/real-time-response/entities/sessions/v1"
+          method: POST
+          headers:
+            accept: application/json
+            Authorization: "Bearer {{ response.json.access_token }}"
+          body_format: json
+          body:
+            device_id: "{{ device.json.resources[0] }}"
+            "queue_offline": true
+          status_code: 201
+        register: session
+      - name: Print the session
+        ansible.builtin.debug:
+          msg: "{{ session.json.resources[0].session_id }}"
+      - name: Get a JWT token to authenticate API requests
+        uri:
+          url: "{{ CSAPIURL | default('https://api.crowdstrike.com') }}/real-time-response/entities/admin-command/v1"
+          method: POST
+          headers:
+            accept: application/json
+            Authorization: "Bearer {{ response.json.access_token }}"
+          body_format: json
+          body:
+            base_command: runscript
+            session_id: "{{ session.json.resources[0].session_id }}"
+            command_string: "runscript -Raw=```{{ COMMAND }}```"
+          status_code: 201
+        register: response
+      - name: Print the session
+        ansible.builtin.debug:
+          msg: "{{ response }}"
+      #- name: Delete the session
+      #  uri:
+      #    url: "{{ CSAPIURL | default('https://api.crowdstrike.com') }}/real-time-response/entities/sessions/v1"
+      #    method: DELETE
+      #    headers:
+      #      accept: application/json
+      #      Authorization: "Bearer {{ response.json.access_token }}"
+      #    body_format: json
+      #    body:
+      #      session_id: "{{ session.json.resources[0].session_id }}"
+      #    status_code: 201
+      #  register: delsession
+      #- name: Print the session
+      #  ansible.builtin.debug:
+      #    msg: "{{ delsession }}"

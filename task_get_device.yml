@@ -1,0 +1,9 @@
+- name: Get CS Devices
+  uri:
+    url: "{{ CSAPIURL | default('https://api.crowdstrike.com') }}/devices/queries/devices/v1?filter=hostname:'{{ HOSTNAME }}'"
+    method: GET
+    headers:
+      accept: application/json
+      Authorization: "Bearer {{ token }}"
+    status_code: 200
+  register: device

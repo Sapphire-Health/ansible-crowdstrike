@@ -1,0 +1,12 @@
+- name: Get a JWT token to authenticate API requests
+  uri:
+    url: "{{ CSAPIURL | default('https://api.crowdstrike.com') }}/oauth2/token"
+    method: POST
+    headers:
+      accept: application/json
+    body_format: form-urlencoded
+    body:
+      client_id: "{{ lookup('env','CSCLIENTID') }}"
+      client_secret: "{{ lookup('env','CSCLIENTSECRET') }}"
+    status_code: 201
+  register: response
