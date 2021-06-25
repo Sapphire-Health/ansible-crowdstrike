@@ -1,0 +1,51 @@
+
+- name: Run command
+  block:
+  - name: Initialize a session with device named {{ item }}
+    uri:
+      url: "{{ CSAPIURL | default('https://api.crowdstrike.com') }}/real-time-response/entities/sessions/v1"
+      method: POST
+      headers:
+        accept: application/json
+        Authorization: "Bearer {{ jwt }}"
+      body_format: json
+      body:
+        device_id: "{{ hostvars[item].device_id }}"
+        "queue_offline": true
+      timeout: 120
+      status_code:
+       - 201
+       - -1
+    register: session
+  - name: Print the session
+    ansible.builtin.debug:
+      msg: "{{ session.json.resources[0].session_id }}"
+    when: session.json is defined
+  - name: Run command in session
+    uri:
+      url: "{{ CSAPIURL | default('https://api.crowdstrike.com') }}/real-time-response/entities/admin-command/v1"
+      method: POST
+      headers:
+        accept: application/json
+        Authorization: "Bearer {{ jwt }}"
+      body_format: json
+      body:
+        base_command: runscript
+        session_id: "{{ session.json.resources[0].session_id }}"
+        command_string: "runscript -Raw=```{{ command }}```"
+        #command_string: "runscript -Raw=```cmd /c echo hello>hello.txt```"
+      timeout: 120
+      status_code:
+        - 201
+        - -1
+    register: response
+    when: session.json is defined
+  - name: Print the session
+    ansible.builtin.debug:
+      msg: "{{ response }}"
+  rescue:
+  - name: Authenticate
+    include_tasks: task_auth.yml
+  - name: Store JWT
+    set_fact:
+      jwt: "{{ response.json.access_token }}"

@@ -1,0 +1,14 @@
+---
+  - hosts: localhost
+    connection: local
+    gather_facts: false
+    tasks:
+      - name: Authenticate
+        include_tasks: task_auth.yml
+      - name: Store JWT
+        set_fact:
+          jwt: "{{ response.json.access_token }}"
+      - name: Run Command
+        include_tasks: task_run_command.yml
+        vars:
+        loop: "{{ query('inventory_hostnames', match_host) }}"
