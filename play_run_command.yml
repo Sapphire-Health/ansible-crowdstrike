@@ -10,5 +10,4 @@
           jwt: "{{ response.json.access_token }}"
       - name: Run Command
         include_tasks: task_run_command.yml
-        vars:
         loop: "{{ query('inventory_hostnames', match_host) }}"
