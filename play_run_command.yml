@@ -9,6 +9,7 @@
         include_tasks: task_auth.yml
       - name: Store JWT
         set_fact:
+          retries: 0
           jwt: "{{ response.json.access_token }}"
       - name: Run Command
         include_tasks: task_run_command.yml

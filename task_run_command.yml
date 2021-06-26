@@ -19,7 +19,7 @@
        - -1
        - 404
     register: session
-  - name: Print the session
+  - name: Print session errors
     ansible.builtin.debug:
       msg:
       - "{{ session.json.errors }}"
@@ -56,4 +56,15 @@
     include_tasks: task_auth.yml
   - name: Store JWT
     set_fact:
+      retries: "{{ retries|int + 1 }}"
       jwt: "{{ response.json.access_token }}"
+  - name: Print current number of retries
+    ansible.builtin.debug:
+      msg:
+      - "{{ retries }}"
+  - name: Try command again
+    include_tasks: task_run_command.yml
+    when: retries|int < 2
+  - name: Reset retries after giving up on host
+    set_fact:
+      retries: 0
