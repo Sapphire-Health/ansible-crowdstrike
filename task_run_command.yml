@@ -11,8 +11,9 @@
       body_format: json
       body:
         device_id: "{{ hostvars[item].device_id }}"
-        "queue_offline": true
-      timeout: 120
+        origin: "string"
+        queue_offline: true
+      timeout: 180
       status_code:
        - 201
        - -1
@@ -34,15 +35,16 @@
         session_id: "{{ session.json.resources[0].session_id }}"
         command_string: "runscript -Raw=```{{ command }}```"
         #command_string: "runscript -Raw=```cmd /c echo hello>hello.txt```"
-      timeout: 120
+      timeout: 180
       status_code:
         - 201
         - -1
     register: response
     when: session.json is defined
-  - name: Print the session
+  - name: Print the response
     ansible.builtin.debug:
-      msg: "{{ response }}"
+      msg: "{{ response.json.resources }}"
+    when: response.json is defined
   rescue:
   - name: Authenticate
     include_tasks: task_auth.yml
