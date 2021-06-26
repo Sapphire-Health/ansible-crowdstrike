@@ -2,6 +2,8 @@
   - hosts: localhost
     connection: local
     gather_facts: false
+    vars:
+      queue_offline: false
     tasks:
       - name: Authenticate
         include_tasks: task_auth.yml
