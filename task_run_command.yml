@@ -12,7 +12,7 @@
       body:
         device_id: "{{ hostvars[item].device_id }}"
         origin: "string"
-        queue_offline: true
+        queue_offline: "{{ queue_offline | default(false) }}"
       timeout: 180
       status_code:
        - 201
