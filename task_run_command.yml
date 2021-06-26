@@ -11,16 +11,18 @@
       body_format: json
       body:
         device_id: "{{ hostvars[item].device_id }}"
-        origin: "string"
-        queue_offline: "{{ queue_offline | default(false) }}"
-      timeout: 180
+        #origin: "string"
+        queue_offline: "{{ queue_offline }}"
+      timeout: 60
       status_code:
        - 201
        - -1
+       - 404
     register: session
   - name: Print the session
     ansible.builtin.debug:
-      msg: "{{ session.json.resources[0].session_id }}"
+      msg:
+      - "{{ session.json.errors }}"
     when: session.json is defined
   - name: Run command in session
     uri:
@@ -35,15 +37,19 @@
         session_id: "{{ session.json.resources[0].session_id }}"
         command_string: "runscript -Raw=```{{ command }}```"
         #command_string: "runscript -Raw=```cmd /c echo hello>hello.txt```"
-      timeout: 180
+      timeout: 60
       status_code:
         - 201
         - -1
     register: response
-    when: session.json is defined
+    when:
+    - session.json is defined
+    - session.json.errors == None
   - name: Print the response
     ansible.builtin.debug:
-      msg: "{{ response.json.resources }}"
+      msg:
+        - "{{ response.json.resources }}"
+        - "{{ response.json.errors }}"
     when: response.json is defined
   rescue:
   - name: Authenticate
